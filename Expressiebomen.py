@@ -7,18 +7,29 @@ from collections import namedtuple
 
 opatt = namedtuple('type', 'precedence associativity')
 
-oplist = {
-        '(' : opatt(9, 'Left'),
-        ')' : opatt(0, 'Left'),
-        '+' : opatt(2, 'Left'),
-        '-' : opatt(2, 'Left'),
-        '*' : opatt(3, 'Left'),
-        '/' : opatt(3, 'Left'),
-        '%' : opatt(3, 'Left'),
-        '**': opatt(4, 'Right'),
-        '^' : opatt(4, 'Right'),
+assoc = {
+        '+' : 2,
+        '-' : 2,
+        '*' : 3,
+        '/' : 3,
+        '%' : 3,
+        '**': 4,
+        '^' : 4,
         
         }
+
+prec = {
+        '+' : 'Left',
+        '-' : 'Left',
+        '*' : 'Left',
+        '/' : 'Left',
+        '%' : 'Left',
+        '**': 'Right',
+        '^' : 'Right',
+        
+        }
+
+oplist = ['+','-','*','/','%','**','^','(',')']
 # split string into list with appropriate attributes for operators
 def tokenize(string):
     #1) split string into constants and operators
@@ -42,10 +53,14 @@ def tokenize(string):
     #3) classify 
     tokens = []
     for i in ans:
-        if i in oplist:
-            tokens.append((i, oplist[i])) #if operator
+        if i == '(':
+            tokens.append(('leftp',i))
+        elif i == ')':
+            tokens.append(('rightp',i))   
+        elif i in oplist:
+            tokens.append(('oper', i)) #if operator
         elif isnumber(i):
-            tokens.append(('num', i))   #if constant
+            tokens.append(('num', i))   #if constant     
         else: 
             tokens.append(('var', i))   #if variable
             
@@ -107,7 +122,6 @@ class Expression():
         tokens = tokenize(string)
         # stack used by the Shunting-Yard algorithm
         stack, output = [], []
-        
         for token, value in tokens:
             if token == 'num':
                 if isint(value): #Append the numbers to the output as a float or an int.
@@ -115,48 +129,53 @@ class Expression():
                 else:
                     output.append(Constant(float(value)))
             elif token == 'var':
-                output.append(Variable(value))
-                'if value = token -> strange result'
+                output.append(Variable(value)) # Append Variables
                 
-            elif token in oplist:
-                t1, (p1, a1) = token, value
-                while len(stack)>0:
-                    t2, (p2, a2) = stack[-1] 
-                    if (a1 == 'Left' and p1 <= p2) or (a1 == 'Right' and p1 < p2): #p1 lower rank
-                        if t1 != ')':
-                            if t2 != '(':
-                                stack.pop()
-                                output.append(t2)
-                            else: 
-                                break
+            elif token == 'oper':
+                token1, value1 = token, value
+                if stack:
+                    while stack[-1][0] == 'oper':   #While there are operators left to process
+                        value2 = stack[-1][1] #Copy values from the top of the stack
+                        if (assoc[value1] == 'Left' and prec[value1] <= prec[value2]) or (assoc[value1] == 'Right' and prec[value1] < prec[value2]):
+                            #Evaluate precedence and associativity of operators
+                            output.append(stack.pop())
                         else:
-                            if t2 != '(':
-                                stack.pop()
-                                output.append(t2)
-                            else:
-                                stack.pop()
-                                break
-                    else:
-                        break
-                if t1 != ')':
-                    stack.append((token, value))
+                            break
+                stack.append((token,value))
+
+            elif token == 'leftp':
+                stack.append((token,value))
+
+            elif token == 'rightp':
+                while stack[-1][0] != 'leftp':
+                    try:
+                        output.append(stack.pop())
+                    except IndexError:
+                        raise 'MismatchedParenthesis'
+                stack.pop()
+                #TODO: check for function token
             else: 
                 raise ValueError('Unknown token: %s' % token)
                     
         while stack:
-            t2, (p2, a2) = stack[-1]
-            stack.pop()
-            output.append(t2)   
+            token = stack.pop()
+            if token == 'leftp' or token == 'rightp':
+                raise 'MismatchedParenthesis'
+
+            output.append(token)
+            print(output)
         #convert RPN to actual expression tree
         for t in output:
-             try:       
+            if type(t) == tuple:
+                t = t[1]
+            try:       
                 if t in oplist:
                     y = stack.pop()
                     x = stack.pop()
                     stack.append(eval('x %s y' % t))
                 else:
                     stack.append(t)
-             except TypeError:
+            except TypeError:
                  stack.append(t) 
         return stack[0]        
     
