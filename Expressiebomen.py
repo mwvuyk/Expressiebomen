@@ -44,7 +44,7 @@ def tokenize(string):
     for i in ans:
         if i in oplist:
             tokens.append((i, oplist[i])) #if operator
-        elif type(i) == int or type(i) == float:
+        elif isnumber(i):
             tokens.append(('num', i))   #if constant
         else: 
             tokens.append(('var', i))   #if variable
@@ -110,13 +110,12 @@ class Expression():
         
         for token, value in tokens:
             if token == 'num':
-                # numbers go directly to the output
-                if isint(value):
-                    output.append(Constant(int(value)))
+                if isint(value): #Append the numbers to the output as a float or an int.
+                    output.append(Constant(int(value))) 
                 else:
                     output.append(Constant(float(value)))
             elif token == 'var':
-                output.append(Variable(value)) 
+                output.append(Variable(value))
                 'if value = token -> strange result'
                 
             elif token in oplist:
@@ -245,10 +244,10 @@ class PowNode(BinaryNode):
     def __init__(self, lhs, rhs):
         super(PowNode, self).__init__(lhs, rhs, '**') 
       
-class PowNode2(BinaryNode):
+class XorNode(BinaryNode):
     """Represents the exponential operator"""
     def __init__(self, lhs, rhs):
-        super(PowNode, self).__init__(lhs, rhs, '^')  
+        super(XorNode, self).__init__(lhs, rhs, '^')  
         #werkt nog niet
         
         
