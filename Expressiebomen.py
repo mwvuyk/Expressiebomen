@@ -1,6 +1,6 @@
 from sympy import Symbol
 
-assoc = {
+precedence = {
         '+' : 2,
         '-' : 2,
         '*' : 3,
@@ -8,10 +8,10 @@ assoc = {
         '%' : 3,
         '**': 4,
         '^' : 4,
-        
+        'sin' : 10
         }
 
-prec = {
+associativity = {
         '+' : 'Left',
         '-' : 'Left',
         '*' : 'Left',
@@ -23,7 +23,8 @@ prec = {
         }
 
 oplist = ['+','-','*','/','%','**','^','(',')']
-flist = ['sin']
+flist = ['sin','cos','tan','log']
+
 # split string into list with appropriate attributes for operators
 def tokenize(string):
     #1) split string into constants and operators
@@ -42,15 +43,22 @@ def tokenize(string):
     for t in stringlist:
         if len(ans) > 0 and t == ans[-1] == '*':
             ans[-1] = '**'
+
+        elif len(ans) > 2 and t == '(' and ans[-1] in flist:
+            ans[-1] = ans[-1]
+            ans.append(t)
         else:
             ans.append(t)
     #3) classify 
     tokens = []
     for i in ans:
-        if i == '(':
-            tokens.append(('leftp',i))
+
+        if len(i)>1 and i in flist:
+            tokens.append(('func',i)) #if function
+        elif i == '(':
+            tokens.append(('leftp',i)) #if parenthesis
         elif i == ')':
-            tokens.append(('rightp',i))   
+            tokens.append(('rightp',i))   #if parenthesis
         elif i in oplist:
             tokens.append(('oper', i)) #if operator
         elif isnumber(i):
@@ -107,8 +115,27 @@ class Expression():
     
     def __xor__(self, other):
         return XorNode(self, other)
-        
-    # TODO: other overloads, such as __sub__, __mul__, etc.
+
+    def sin(self):
+        return SinNode(self)
+
+
+    def inorderRead(self, p=0):
+        if type(self) == Constant or type(self) == Variable:
+            return str(self.content) #If we have a number, just return the number
+        elif type(self) == SinNode: #TODO fix 
+            a = self.content + '(' + self.lhs.inorderRead(-1) + ')'
+            return a
+        else:    
+            try:
+                a = self.lhs.inorderRead(precedence[self.content]) #If we have an operator
+                a = a + self.content                               #Read its left and right nodes
+                a = a + self.rhs.inorderRead(precedence[self.content]) #In Inorder (Left,self,Right)
+            except AttributeError:
+                pass
+            if precedence[self.content] < p: #Parenthesis should be added if the order of operations
+                a = '(' + a + ')' #Does not match the precedence of the operators
+            return a
     
     # basic Shunting-yard algorithm
     def fromString(string):
@@ -116,12 +143,16 @@ class Expression():
         tokens = tokenize(string)
         # stack used by the Shunting-Yard algorithm
         stack, output = [], []
+        print(tokens)
         for token, value in tokens:
             if token == 'num':
                 if isint(value): #Append the numbers to the output as a float or an int.
                     output.append(Constant(int(value))) 
                 else:
                     output.append(Constant(float(value)))
+
+            elif token == 'func':
+                stack.append((token,value))
             elif token == 'var':
                 output.append(Variable(value)) # Append Variables
                 
@@ -130,7 +161,7 @@ class Expression():
                 if stack:
                     while stack[-1][0] == 'oper':   #While there are operators left to process
                         value2 = stack[-1][1] #Copy values from the top of the stack
-                        if (assoc[value1] == 'Left' and prec[value1] <= prec[value2]) or (assoc[value1] == 'Right' and prec[value1] < prec[value2]):
+                        if (precedence[value1] == 'Left' and associativity[value1] <= associativity[value2]) or (precedence[value1] == 'Right' and associativity[value1] < associativity[value2]):
                             #Evaluate precedence and associativity of operators
                             output.append(stack.pop())
                         else:
@@ -146,7 +177,12 @@ class Expression():
                         output.append(stack.pop())
                     except IndexError:
                         raise 'MismatchedParenthesis'
+                print(stack)
                 stack.pop()
+                if len(stack) > 0 and stack[-1][0] == 'func':
+                    output.append(stack.pop())
+                    print(output)
+
                 #TODO: check for function token
             else: 
                 raise ValueError('Unknown token: %s' % token)
@@ -167,6 +203,9 @@ class Expression():
                     y = stack.pop()
                     x = stack.pop()
                     stack.append(eval('x %s y' % t))
+                elif t in flist:
+                    x = stack.pop()
+                    stack.append(eval('Expression.%s(x)' % t))
                 else:
                     stack.append(t)
             except TypeError:
@@ -217,7 +256,7 @@ class BinaryNode(Expression):
         self.rhs = rhs
         self.content = op_symbol
     
-    # TODO: what other properties could you need? Precedence, associativity, identity, etc.
+    # TODO: what other properties could you need? precedence, precedenceiativity, identity, etc.
             
     def __eq__(self, other):
         if type(self) == type(other):
@@ -232,6 +271,14 @@ class BinaryNode(Expression):
         # TODO: do we always need parantheses?
         return "(%s %s %s)" % (lstring, self.content, rstring)
 
+class Function(Expression):
+    def __init__(self,lhs,content):
+        self.lhs = lhs
+        self.content = content
+
+    def __str__(self):
+        lstring = str(self.lhs)
+        return "%s(%s)" % (self.content, lstring)
     
 class AddNode(BinaryNode):
     """Represents the addition operator"""
@@ -263,7 +310,9 @@ class XorNode(BinaryNode):
     def __init__(self, lhs, rhs):
         super(XorNode, self).__init__(lhs, rhs, '^')
 
-
+class SinNode(Function):
+    def __init__(self, lhs):
+        super (SinNode, self).__init__(lhs,'sin')
         
         
         
@@ -273,9 +322,9 @@ class XorNode(BinaryNode):
 
 
 
-a = Expression.fromString('( 1 + x ) / 5 ** 6')
-b = Expression.fromString('5 * x ** 2')
-print(a * b)
+a = Expression.fromString('sin(5)*3 + x * sin(3 * x ** 5)')
+print(a)
+print(a.inorderRead())
 
 #expr2 = Expression.fromString('1+2+3')
 #expr3 = Expression.fromString('1+2+4')
