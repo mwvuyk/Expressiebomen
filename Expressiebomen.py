@@ -97,7 +97,7 @@ class Expression():
         return PowNode(self, other)
     
     def __xor__(self, other):
-        return PowNode2(self, other)
+        return XorNode(self, other)
         
     # TODO: other overloads, such as __sub__, __mul__, etc.
     
