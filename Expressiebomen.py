@@ -1,11 +1,4 @@
-#import math
-#import numpy as py
 from sympy import Symbol
-from collections import namedtuple
-
-#dictionary of operators with corresponding attributes (precedence and associativity)
-
-opatt = namedtuple('type', 'precedence associativity')
 
 assoc = {
         '+' : 2,
@@ -30,6 +23,7 @@ prec = {
         }
 
 oplist = ['+','-','*','/','%','**','^','(',')']
+flist = ['sin']
 # split string into list with appropriate attributes for operators
 def tokenize(string):
     #1) split string into constants and operators
@@ -60,7 +54,7 @@ def tokenize(string):
         elif i in oplist:
             tokens.append(('oper', i)) #if operator
         elif isnumber(i):
-            tokens.append(('num', i))   #if constant     
+            tokens.append(('num', i))   #if constant
         else: 
             tokens.append(('var', i))   #if variable
             
@@ -163,7 +157,7 @@ class Expression():
                 raise 'MismatchedParenthesis'
 
             output.append(token)
-            print(output)
+        
         #convert RPN to actual expression tree
         for t in output:
             if type(t) == tuple:
@@ -237,7 +231,8 @@ class BinaryNode(Expression):
         
         # TODO: do we always need parantheses?
         return "(%s %s %s)" % (lstring, self.content, rstring)
-        
+
+    
 class AddNode(BinaryNode):
     """Represents the addition operator"""
     def __init__(self, lhs, rhs):
@@ -266,8 +261,9 @@ class PowNode(BinaryNode):
 class XorNode(BinaryNode):
     """Represents the exponential operator"""
     def __init__(self, lhs, rhs):
-        super(XorNode, self).__init__(lhs, rhs, '^')  
-        #werkt nog niet
+        super(XorNode, self).__init__(lhs, rhs, '^')
+
+
         
         
         
@@ -276,11 +272,10 @@ class XorNode(BinaryNode):
 
 
 
-tokens = tokenize('1+2')
 
+a = Expression.fromString('( 1 + x ) / 5 ** 6')
+b = Expression.fromString('5 * x ** 2')
+print(a * b)
 
-
-expr1 = Expression.fromString('( 1 + x ) / 5 ** 6')
-print(expr1)
 #expr2 = Expression.fromString('1+2+3')
 #expr3 = Expression.fromString('1+2+4')
