@@ -182,38 +182,38 @@ class Expression():
 class Variable(Expression):
     """Represents variable"""
     def __init__(self, x):
-        self.symbol = Symbol(str(x))
+        self.content = Symbol(str(x))
      
     def __eq__(self, other):
         if isinstance(other, Variable):
-            return self.symbol == other.symbol
+            return self.content == other.content
         else:
             return False
         
     def __str__(self):
-        return str(self.symbol)
+        return str(self.content)
     
 
 class Constant(Expression):
     """Represents a constant value"""
     def __init__(self, value):
-        self.value = value
+        self.content = value
         
     def __eq__(self, other):
         if isinstance(other, Constant):
-            return self.value == other.value
+            return self.content == other.content
         else:
             return False
         
     def __str__(self):
-        return str(self.value)
+        return str(self.content)
         
     # allow conversion to numerical values
     def __int__(self):
-        return int(self.value)
+        return int(self.content)
         
     def __float__(self):
-        return float(self.value)
+        return float(self.content)
         
 class BinaryNode(Expression):
     """A node in the expression tree representing a binary operator."""
@@ -221,7 +221,7 @@ class BinaryNode(Expression):
     def __init__(self, lhs, rhs, op_symbol):
         self.lhs = lhs
         self.rhs = rhs
-        self.op_symbol = op_symbol
+        self.content = op_symbol
     
     # TODO: what other properties could you need? Precedence, associativity, identity, etc.
             
@@ -236,7 +236,7 @@ class BinaryNode(Expression):
         rstring = str(self.rhs)
         
         # TODO: do we always need parantheses?
-        return "(%s %s %s)" % (lstring, self.op_symbol, rstring)
+        return "(%s %s %s)" % (lstring, self.content, rstring)
         
 class AddNode(BinaryNode):
     """Represents the addition operator"""
