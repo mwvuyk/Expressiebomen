@@ -23,7 +23,7 @@ associativity = {
         }
 
 oplist = ['+','-','*','/','%','**','^','(',')']
-flist = ['sin','cos','tan','log']
+flist = ['sin','cos','tan','log','ln','exp']
 
 # split string into list with appropriate attributes for operators
 def tokenize(string):
@@ -119,11 +119,27 @@ class Expression():
     def sin(self):
         return SinNode(self)
 
+    def cos(self):
+        return CosNode(self)
+
+    def tan(self):
+        return TanNode(self)
+
+    def exp(self):
+        return ExpNode(self)
+
+    def ln(self):
+        return LnNode(self)
+
+    def log(self):
+        return LogNode(self)
+
 
     def inorderRead(self, p=0):
         if type(self) == Constant or type(self) == Variable:
             return str(self.content) #If we have a number, just return the number
-        elif type(self) == SinNode: #TODO fix 
+        
+        elif self.content in flist: #If we have a function, we need to set very low precedence and always have parenthesis
             a = self.content + '(' + self.lhs.inorderRead(-1) + ')'
             return a
         else:    
@@ -131,8 +147,8 @@ class Expression():
                 a = self.lhs.inorderRead(precedence[self.content]) #If we have an operator
                 a = a + self.content                               #Read its left and right nodes
                 a = a + self.rhs.inorderRead(precedence[self.content]) #In Inorder (Left,self,Right)
-            except AttributeError:
-                pass
+            except AttributeError:                                 #If no more nodes exist, nothing more needs to be done. (This may not be neccesary.)
+                print("AttributeError. Invalid expression?")
             if precedence[self.content] < p: #Parenthesis should be added if the order of operations
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
@@ -143,7 +159,6 @@ class Expression():
         tokens = tokenize(string)
         # stack used by the Shunting-Yard algorithm
         stack, output = [], []
-        print(tokens)
         for token, value in tokens:
             if token == 'num':
                 if isint(value): #Append the numbers to the output as a float or an int.
@@ -177,11 +192,9 @@ class Expression():
                         output.append(stack.pop())
                     except IndexError:
                         raise 'MismatchedParenthesis'
-                print(stack)
                 stack.pop()
                 if len(stack) > 0 and stack[-1][0] == 'func':
                     output.append(stack.pop())
-                    print(output)
 
                 #TODO: check for function token
             else: 
@@ -275,6 +288,7 @@ class Function(Expression):
     def __init__(self,lhs,content):
         self.lhs = lhs
         self.content = content
+        self.rhs = None
 
     def __str__(self):
         lstring = str(self.lhs)
@@ -306,13 +320,40 @@ class PowNode(BinaryNode):
         super(PowNode, self).__init__(lhs, rhs, '**') 
       
 class XorNode(BinaryNode):
-    """Represents the exponential operator"""
+    """Represents the exclusive or operator"""
     def __init__(self, lhs, rhs):
         super(XorNode, self).__init__(lhs, rhs, '^')
 
 class SinNode(Function):
+    """Represents the sin function"""
     def __init__(self, lhs):
         super (SinNode, self).__init__(lhs,'sin')
+
+class TanNode(Function):
+    """Represents the tan function"""
+    def __init__(self,lhs):
+        super (TanNode,self).__init__(lhs,'tan')
+
+class CosNode(Function):
+    """Represents the cos function"""
+    def __init__(self,lhs):
+        super (CosNode,self).__init__(lhs,'cos')
+
+class LogNode(Function):
+    """Represents the log with base 10"""
+    def __init__(self,lhs):
+        super (LogNode,self).__init__(lhs,'log')
+
+class LnNode(Function):
+    """Represents the natural logarithm"""
+    def __init__(self,lhs):
+        super (LnNode,self).__init__(lhs,'ln')
+
+class ExpNode(Function):
+    """Represents the exponent (e^x)"""
+    def __init__(self,lhs):
+        super (ExpNode,self).__init__(lhs,'exp')
+    
         
         
         
@@ -322,7 +363,7 @@ class SinNode(Function):
 
 
 
-a = Expression.fromString('sin(5)*3 + x * sin(3 * x ** 5)')
+a = Expression.fromString('sin(5)*3 + x * cos(3 * x ** 5) - tan(log(73)) * ln(exp(35))')
 print(a)
 print(a.inorderRead())
 
