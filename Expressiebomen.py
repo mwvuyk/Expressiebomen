@@ -1,4 +1,10 @@
 from sympy import Symbol
+from math import sin as sin
+from math import cos as cos
+from math import tan as tan
+from math import log10 as log
+from math import log as ln
+from math import exp as exp
 
 precedence = {
         '+' : 2,
@@ -156,7 +162,7 @@ class Expression():
     def evaluate(self, d={}):
         for var in d:
             v = var   
-        exec("%s = %d" % (v,d[var]))
+            exec("%s = %d" % (v,d[var]))
         return eval(str(self))     
     
     # basic Shunting-yard algorithm
@@ -367,13 +373,9 @@ class ExpNode(Function):
 
 
 
-a = Constant(2)
-b = Constant(3)
-x = Variable('x')
-c = a * x + b
+c = Expression.fromString('(sin(7) * x) + (exp(y)**2)')
 
-
-k = c.evaluate({'x' : 2})
+k = c.evaluate({'x' : 2,'y' : 3})
 print(k)
 
 #expr2 = Expression.fromString('1+2+3')
