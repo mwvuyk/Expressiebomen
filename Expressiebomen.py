@@ -152,6 +152,12 @@ class Expression():
             if precedence[self.content] < p: #Parenthesis should be added if the order of operations
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
+        
+    def evaluate(self, d={}):
+        for var in d:
+            v = var   
+        exec("%s = %d" % (v,d[var]))
+        return eval(str(self))     
     
     # basic Shunting-yard algorithm
     def fromString(string):
@@ -364,8 +370,17 @@ class ExpNode(Function):
 
 
 a = Expression.fromString('sin(5)*3 + x * cos(3 * x ** 5) - tan(log(73)) * ln(exp(35))')
-print(a)
+#print(a)
 print(a.inorderRead())
+
+a = Constant(2)
+b = Constant(3)
+x = Variable('x')
+c = a * x + b
+
+
+k = c.evaluate({'x' : 2})
+print(k)
 
 #expr2 = Expression.fromString('1+2+3')
 #expr3 = Expression.fromString('1+2+4')
