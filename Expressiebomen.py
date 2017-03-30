@@ -269,19 +269,18 @@ class BinaryNode(Expression):
         self.rhs = rhs
         self.content = op_symbol
     
-    # TODO: what other properties could you need? precedence, precedenceiativity, identity, etc.
-            
     def __eq__(self, other):
         if type(self) == type(other):
-            return self.lhs == other.lhs and self.rhs == other.rhs
+            if self.content == '+' or self.content == '*':
+                return (self.lhs == other.lhs and self.rhs == other.rhs) or (self.lhs == other.rhs and self.rhs == other.lhs)
+            else:
+                return self.lhs == other.lhs and self.rhs == other.rhs
         else:
             return False
             
     def __str__(self):
         lstring = str(self.lhs)
         rstring = str(self.rhs)
-        
-        # TODO: do we always need parantheses?
         return "(%s %s %s)" % (lstring, self.content, rstring)
 
 class Function(Expression):
@@ -357,15 +356,11 @@ class ExpNode(Function):
         
         
         
-        
-# TODO: add more subclasses of Expression to represent operators, variables, functions, etc.
 
 
-
-
-a = Expression.fromString('sin(5)*3 + x * cos(3 * x ** 5) - tan(log(73)) * ln(exp(35))')
+a = Expression.fromString('x * 3')
+b = Expression.fromString('3 * x')
 print(a)
 print(a.inorderRead())
-
 #expr2 = Expression.fromString('1+2+3')
 #expr3 = Expression.fromString('1+2+4')
