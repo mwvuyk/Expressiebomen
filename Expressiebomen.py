@@ -157,7 +157,7 @@ class Expression():
             return a
 
         elif self.content == '-' and self.rhs == None: #If we have a negative -, treat it as a function but without parentheses
-            a = self.content + self.lhs.inorderRead(-1)
+            a = self.content + self.lhs.inorderRead(5)
             return a
         else:    
             try:
@@ -194,13 +194,13 @@ class Expression():
             elif token == 'var':
                 output.append(Variable(value)) # Append Variables
 
-            elif token == 'neg':
-                stack.append((token,value))
+          #  elif token == 'neg':
+          #      stack.append((token,value))
                 
-            elif token == 'oper':
+            elif token == 'oper' or token == 'neg':
                 token1, value1 = token, value
                 if stack:
-                    while stack[-1][0] == 'oper':   #While there are operators left to process
+                    while stack[-1][0] == 'oper' or stack[-1][0] == 'neg':   #While there are operators left to process
                         value2 = stack[-1][1] #Copy values from the top of the stack
                         if ((associativity[value1] == 'Left' and (precedence[value1] <= precedence[value2]))
                         or (associativity[value1] == 'Right' and (precedence[value1] < precedence[value2]))):
@@ -420,9 +420,9 @@ class NegNode(UnaryNode):
 
 c = Expression.fromString('(sin(7) * x) + (exp(y)**2)')
 x = Expression.fromString
-a = x('-5')
-k = c.evaluate({'x' : 2,'y' : 3})
-print(k)
+a = x('-(3+5)')
+b = x('-3+5')
+
 
 
 #expr2 = Expression.fromString('1+2+3')
