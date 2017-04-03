@@ -367,7 +367,7 @@ class MulNode(BinaryNode):
         super(MulNode, self).__init__(lhs, rhs, '*')
 
     def diff(self,var='x'):
-        result = self.lhs.diff(var)*self.rhs+self.rhs.diff(var)*self.lhs
+        result = (self.lhs.diff(var)*self.rhs)+(self.rhs.diff(var)*self.lhs)
         return result        
         
 class DivNode(BinaryNode):
@@ -406,42 +406,60 @@ class SinNode(Function):
     def __init__(self, lhs):
         super (SinNode, self).__init__(lhs,'sin')
 
+    def diff(self,var='x'):
+        result = self.lhs.diff(var)*Expression.cos(self.lhs)
+        return result
+
 class TanNode(Function):
     """Represents the tan function"""
     def __init__(self,lhs):
         super (TanNode,self).__init__(lhs,'tan')
+
+    def diff(self,var='x'):
+        result = (Variable(2)*self.lhs.diff(var))/(Expression.cos(Variable(2)*self.lhs)+Variable(1))
+        return result
 
 class CosNode(Function):
     """Represents the cos function"""
     def __init__(self,lhs):
         super (CosNode,self).__init__(lhs,'cos')
 
+    def diff(self,var='x'):
+        result = self.lhs.diff(var)*-Expression.sin(self.lhs)
+        return result
+
 class LogNode(Function):
     """Represents the natural logarithm"""
     def __init__(self,lhs):
         super (LogNode,self).__init__(lhs,'log')
+
+    def diff(self,var='x'):
+        result = self.lhs.diff(var) / self.lhs
+        return result
 
 
 class ExpNode(Function):
     """Represents the exponent (e^x)"""
     def __init__(self,lhs):
         super (ExpNode,self).__init__(lhs,'exp')
+
+    def diff(self,var='x'):
+        result = self.lhs.diff(var)*Expression.exp(self.lhs)
+        return result
     
         
 class NegNode(UnaryNode):
     """Represents the negative operator (-)"""
     def __init__(self,lhs):
         super (NegNode,self).__init__(lhs,'-')
+ 
+    def diff(self,var='x'):
+        return -self.lhs.diff(var)
 
 
 
-
-
-c = Expression.fromString('(sin(7) * x) + (exp(y)**2)')
 x = Expression.fromString
-d = x('x**2**x')
+#d = x('3*log(3*x)')
+d = x('-x')
 e = d.diff()
-
-
-#expr2 = Expression.fromString('1+2+3')
-#expr3 = Expression.fromString('1+2+4')
+print(e)
