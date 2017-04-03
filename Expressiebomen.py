@@ -1,10 +1,5 @@
 from sympy import Symbol
-from math import sin as sin
-from math import cos as cos
-from math import tan as tan
-from math import log10 as log
-from math import log as ln
-from math import exp as exp
+from math import sin,cos,tan,log,exp
 
 precedence = {
         '+' : 2,
@@ -29,7 +24,7 @@ associativity = {
         }
 
 oplist = ['+','-','*','/','%','**','^','(',')']
-flist = ['sin','cos','tan','log','ln','exp']
+flist = ['sin','cos','tan','log','exp']
 
 # split string into list with appropriate attributes for operators
 def tokenize(string):
@@ -140,9 +135,6 @@ class Expression():
 
     def exp(self):
         return ExpNode(self)
-
-    def ln(self):
-        return LnNode(self)
 
     def log(self):
         return LogNode(self)
@@ -257,7 +249,8 @@ class Expression():
                     stack.append(t)
             except TypeError:
                  stack.append(t) 
-        return stack[0]        
+        return stack[0]    
+        
     
 class Variable(Expression):
     """Represents variable"""
@@ -272,6 +265,12 @@ class Variable(Expression):
         
     def __str__(self):
         return str(self.content)
+
+    def diff(self,var='x'):
+        if str(self.content) == var:
+            return Constant(1)
+        else:
+            return Constant(0)
     
 
 class Constant(Expression):
@@ -294,6 +293,9 @@ class Constant(Expression):
         
     def __float__(self):
         return float(self.content)
+
+    def diff(self,var='x'):
+        return Constant(0)
         
 class BinaryNode(Expression):
     """A node in the expression tree representing a binary operator."""
@@ -345,31 +347,59 @@ class AddNode(BinaryNode):
     """Represents the addition operator"""
     def __init__(self, lhs, rhs):
         super(AddNode, self).__init__(lhs, rhs, '+')
+
+    def diff(self,var='x'):
+        result = self.lhs.diff(var) + self.rhs.diff(var)
+        return result
         
 class SubNode(BinaryNode):
     """Represents the subtraction operator"""
     def __init__(self, lhs, rhs):
-        super(SubNode, self).__init__(lhs, rhs, '-')    
+        super(SubNode, self).__init__(lhs, rhs, '-')
         
+    def diff(self,var='x'):
+        result = self.lhs.diff(var) - self.rhs.diff(var)
+        return result
+    
 class MulNode(BinaryNode):
     """Represents the multiplication operator"""
     def __init__(self, lhs, rhs):
         super(MulNode, self).__init__(lhs, rhs, '*')
+
+    def diff(self,var='x'):
+        result = self.lhs.diff(var)*self.rhs+self.rhs.diff(var)*self.lhs
+        return result        
         
 class DivNode(BinaryNode):
     """Represents the division operator"""
     def __init__(self, lhs, rhs):
-        super(DivNode, self).__init__(lhs, rhs, '/')        
+        super(DivNode, self).__init__(lhs, rhs, '/')
+
+    def diff(self,var='x'):
+        result = (self.lhs.diff(var)*self.rhs+self.rhs.diff(var)*self.lhs)/(self.rhs**2)
+        return result
         
 class PowNode(BinaryNode):
     """Represents the exponential operator"""
     def __init__(self, lhs, rhs):
         super(PowNode, self).__init__(lhs, rhs, '**') 
-      
+
+    def diff(self,var='x'):
+        f = self.lhs
+        g = self.rhs
+        df = self.lhs.diff(var)
+        dg = self.rhs.diff(var)
+        result = f**(g-Variable(1))*(g*df+f*Expression.log(f)*dg)
+        return result
+                  
+    
 class XorNode(BinaryNode):
     """Represents the exclusive or operator"""
     def __init__(self, lhs, rhs):
         super(XorNode, self).__init__(lhs, rhs, '^')
+
+    def diff(self,var='x'):
+        print("You cannot diff Xor. Did you mean **?")
 
 class SinNode(Function):
     """Represents the sin function"""
@@ -387,14 +417,10 @@ class CosNode(Function):
         super (CosNode,self).__init__(lhs,'cos')
 
 class LogNode(Function):
-    """Represents the log with base 10"""
+    """Represents the natural logarithm"""
     def __init__(self,lhs):
         super (LogNode,self).__init__(lhs,'log')
 
-class LnNode(Function):
-    """Represents the natural logarithm"""
-    def __init__(self,lhs):
-        super (LnNode,self).__init__(lhs,'ln')
 
 class ExpNode(Function):
     """Represents the exponent (e^x)"""
@@ -413,9 +439,8 @@ class NegNode(UnaryNode):
 
 c = Expression.fromString('(sin(7) * x) + (exp(y)**2)')
 x = Expression.fromString
-a = x('-(3+5)')
-b = x('-3+5')
-
+d = x('x**2**x')
+e = d.diff()
 
 
 #expr2 = Expression.fromString('1+2+3')
