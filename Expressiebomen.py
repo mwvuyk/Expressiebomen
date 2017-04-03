@@ -14,7 +14,7 @@ precedence = {
         '%' : 3,
         '**': 4,
         '^' : 4,
-        'sin' : 10
+        '#' : 5,
         }
 
 associativity = {
@@ -25,7 +25,7 @@ associativity = {
         '%' : 'Left',
         '**': 'Right',
         '^' : 'Right',
-        
+        '#' : 'Left',
         }
 
 oplist = ['+','-','*','/','%','**','^','(',')']
@@ -57,9 +57,12 @@ def tokenize(string):
             ans.append(t)
     #3) classify 
     tokens = []
+    prev = None
     for i in ans:
-
-        if len(i)>1 and i in flist:
+        
+        if ((prev != ')' and prev in oplist) or prev == None) and i == '-':
+            tokens.append(('neg','#')) #if negation -
+        elif len(i)>1 and i in flist:
             tokens.append(('func',i)) #if function
         elif i == '(':
             tokens.append(('leftp',i)) #if parenthesis
@@ -71,6 +74,7 @@ def tokenize(string):
             tokens.append(('num', i))   #if constant
         else: 
             tokens.append(('var', i))   #if variable
+        prev = i
             
     return tokens
 
@@ -122,6 +126,9 @@ class Expression():
     def __xor__(self, other):
         return XorNode(self, other)
 
+    def __neg__(self):
+        return NegNode(self)
+
     def sin(self):
         return SinNode(self)
 
@@ -148,6 +155,10 @@ class Expression():
         elif self.content in flist: #If we have a function, we need to set very low precedence and always have parenthesis
             a = self.content + '(' + self.lhs.inorderRead(-1) + ')'
             return a
+
+        elif self.content == '-' and self.rhs == None: #If we have a negative -, treat it as a function but without parentheses
+            a = self.content + self.lhs.inorderRead(-1)
+            return a
         else:    
             try:
                 a = self.lhs.inorderRead(precedence[self.content]) #If we have an operator
@@ -163,7 +174,7 @@ class Expression():
         for var in d:
             v = var   
             exec("%s = %d" % (v,d[var]))
-        return eval(str(self))     
+        return eval(self.inorderRead())     
     
     # basic Shunting-yard algorithm
     def fromString(string):
@@ -182,17 +193,24 @@ class Expression():
                 stack.append((token,value))
             elif token == 'var':
                 output.append(Variable(value)) # Append Variables
+
+            elif token == 'neg':
+                stack.append((token,value))
                 
             elif token == 'oper':
                 token1, value1 = token, value
                 if stack:
                     while stack[-1][0] == 'oper':   #While there are operators left to process
                         value2 = stack[-1][1] #Copy values from the top of the stack
-                        if (precedence[value1] == 'Left' and associativity[value1] <= associativity[value2]) or (precedence[value1] == 'Right' and associativity[value1] < associativity[value2]):
+                        if ((associativity[value1] == 'Left' and (precedence[value1] <= precedence[value2]))
+                        or (associativity[value1] == 'Right' and (precedence[value1] < precedence[value2]))):
                             #Evaluate precedence and associativity of operators
                             output.append(stack.pop())
+                            if not stack:
+                                break
                         else:
                             break
+                        
                 stack.append((token,value))
 
             elif token == 'leftp':
@@ -218,7 +236,7 @@ class Expression():
                 raise 'MismatchedParenthesis'
 
             output.append(token)
-        
+        print(output)
         #convert RPN to actual expression tree
         for t in output:
             if type(t) == tuple:
@@ -231,6 +249,10 @@ class Expression():
                 elif t in flist:
                     x = stack.pop()
                     stack.append(eval('Expression.%s(x)' % t))
+                elif t == '#':
+                    x = stack.pop()
+                    stack.append(eval('-x'))
+                    
                 else:
                     stack.append(t)
             except TypeError:
@@ -291,9 +313,29 @@ class BinaryNode(Expression):
             return False
             
     def __str__(self):
-        lstring = str(self.lhs)
-        rstring = str(self.rhs)
-        return "(%s %s %s)" % (lstring, self.content, rstring)
+        return self.inorderRead()
+      #  lstring = str(self.lhs)
+      #  rstring = str(self.rhs)
+      #  return "(%s %s %s)" % (lstring, self.content, rstring)
+
+class UnaryNode(Expression):
+
+    def __init__(self,lhs,op_symbol):
+        self.lhs = lhs
+        self.rhs = None
+        self.content = op_symbol
+
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return self.lhs == other.lhs
+        else:
+            return False
+
+    def __str__(self):
+        return self.inorderRead()
+       # lstring = str(self.lhs)
+       # return "%s %s" % (self.content,lstring)
+        
 
 class Function(Expression):
     def __init__(self,lhs,content):
@@ -302,8 +344,9 @@ class Function(Expression):
         self.rhs = None
 
     def __str__(self):
-        lstring = str(self.lhs)
-        return "%s(%s)" % (self.content, lstring)
+        return self.inorderRead()
+      #  lstring = str(self.lhs)
+      #  return "%s(%s)" % (self.content, lstring)
     
 class AddNode(BinaryNode):
     """Represents the addition operator"""
@@ -366,17 +409,21 @@ class ExpNode(Function):
         super (ExpNode,self).__init__(lhs,'exp')
     
         
-        
-        
+class NegNode(UnaryNode):
+    """Represents the negative operator (-)"""
+    def __init__(self,lhs):
+        super (NegNode,self).__init__(lhs,'-')
 
 
 
 
 
 c = Expression.fromString('(sin(7) * x) + (exp(y)**2)')
-
+x = Expression.fromString
+a = x('-5')
 k = c.evaluate({'x' : 2,'y' : 3})
 print(k)
+
 
 #expr2 = Expression.fromString('1+2+3')
 #expr3 = Expression.fromString('1+2+4')
