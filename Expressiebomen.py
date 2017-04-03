@@ -158,7 +158,7 @@ class Expression():
                 a = a + self.rhs.inorderRead(precedence[self.content]) #In Inorder (Left,self,Right)
             except AttributeError:                                 #If no more nodes exist, nothing more needs to be done. (This may not be neccesary.)
                 print("AttributeError. Invalid expression?")
-            if precedence[self.content] < p: #Parenthesis should be added if the order of operations
+            if precedence[self.content] <= p: #Parenthesis should be added if the order of operations
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
         
@@ -315,7 +315,14 @@ class BinaryNode(Expression):
             return False
             
     def __str__(self):
-        return self.inorderRead()
+      #  return self.inorderRead()
+        lstring = str(self.lhs)
+        rstring = str(self.rhs)
+        if isinstance(self.lhs, BinaryNode) and precedence[self.lhs.content] <= precedence[self.content]:
+            lstring = '(' + lstring + ')'
+        if isinstance(self.rhs, BinaryNode) and precedence[self.rhs.content] <= precedence[self.content]:        
+            rstring = '(' + rstring + ')'
+        return "%s %s %s" % (lstring, self.content, rstring)
 
 class UnaryNode(Expression):
 
@@ -331,8 +338,9 @@ class UnaryNode(Expression):
             return False
 
     def __str__(self):
-        return self.inorderRead()
-
+   #     return self.inorderRead()
+        lstring = str(self.lhs)
+        return "%s %s" % (self.content,lstring)
 class Function(Expression):
     def __init__(self,lhs,content):
         self.lhs = lhs
@@ -340,9 +348,10 @@ class Function(Expression):
         self.rhs = None
 
     def __str__(self):
-        return self.inorderRead()
+   #     return self.inorderRead()
 
-    
+        lstring = str(self.lhs)
+        return "%s(%s)" % (self.content, lstring)
 class AddNode(BinaryNode):
     """Represents the addition operator"""
     def __init__(self, lhs, rhs):
@@ -459,7 +468,7 @@ class NegNode(UnaryNode):
 
 
 x = Expression.fromString
-#d = x('3*log(3*x)')
-d = x('-x')
+d = x('2+3*4')
+print(d)
 e = d.diff()
 print(e)
