@@ -314,9 +314,6 @@ class BinaryNode(Expression):
             
     def __str__(self):
         return self.inorderRead()
-      #  lstring = str(self.lhs)
-      #  rstring = str(self.rhs)
-      #  return "(%s %s %s)" % (lstring, self.content, rstring)
 
 class UnaryNode(Expression):
 
@@ -333,9 +330,6 @@ class UnaryNode(Expression):
 
     def __str__(self):
         return self.inorderRead()
-       # lstring = str(self.lhs)
-       # return "%s %s" % (self.content,lstring)
-        
 
 class Function(Expression):
     def __init__(self,lhs,content):
@@ -345,8 +339,7 @@ class Function(Expression):
 
     def __str__(self):
         return self.inorderRead()
-      #  lstring = str(self.lhs)
-      #  return "%s(%s)" % (self.content, lstring)
+
     
 class AddNode(BinaryNode):
     """Represents the addition operator"""
