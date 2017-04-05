@@ -162,11 +162,50 @@ class Expression():
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
         
+    def simplify(self, prev = None):
+        if type(self) == Constant or type(self) == Variable:
+            return self
+        elif type(self.lhs) == Constant and type(self.rhs) == Constant:
+            if type(self) == DivNode and self.rhs.content == 0:       #special case for division by zero
+                print("ERROR! Division by zero! Cannot be simplified.")
+            else:        
+                self = Constant(eval('self.lhs.content %s self.rhs.content' % self.content)) 
+            return self    
+        elif type(self) == MulNode:
+            if self.rhs.content == 0 or self.lhs.content == 0:
+                self = Constant(0)
+                return self
+            elif self.rhs.content == 1:
+                self = self.lhs
+                return self
+            elif self.lhs.content == 1:
+                self = self.rhs   
+                return self    
+        elif type(self) == AddNode:
+            if self.rhs.content == 0:
+                self = self.lhs
+                return self
+            elif self.lhs.content == 0:
+                self = self.rhs 
+                return self
+        elif type(self) == SubNode:
+            if self.rhs.content == 0:
+                self = self.lhs
+                return self
+            #otherwise NegNode    
+        self.lhs = Expression.simplify(self.lhs)
+        self.rhs = Expression.simplify(self.rhs)
+        if self == prev: #if nothing changes after another recursion
+            return self
+        else: 
+            return self.simplify(prev = self)
+        
+        
     def evaluate(self, d={}):
         for var in d:
             v = var   
             exec("%s = %d" % (v,d[var]))
-        return eval(self.inorderRead())     
+        return eval(self.inorderRead())
     
     # basic Shunting-yard algorithm
     def fromString(string):
@@ -228,7 +267,6 @@ class Expression():
                 raise 'MismatchedParenthesis'
 
             output.append(token)
-        print(output)
         #convert RPN to actual expression tree
         for t in output:
             if type(t) == tuple:
@@ -468,7 +506,8 @@ class NegNode(UnaryNode):
 
 
 x = Expression.fromString
-d = x('2+3*4')
+d = x('5 * 8 * x**2')
 print(d)
-e = d.diff()
-print(e)
+f = d.diff()
+print(f)
+print(f.simplify())
