@@ -192,7 +192,14 @@ class Expression():
             if self.rhs.content == 0:
                 self = self.lhs
                 return self
-            #otherwise NegNode    
+            #otherwise NegNode     
+        elif type(self) == PowNode:
+            if self.rhs.content == 0:
+                self = Constant(1)
+                return self
+            elif self.rhs.content == 1:
+                self = self.lhs
+                return self    
         self.lhs = Expression.simplify(self.lhs)
         self.rhs = Expression.simplify(self.rhs)
         if self == prev: #if nothing changes after another recursion
@@ -436,7 +443,7 @@ class PowNode(BinaryNode):
         g = self.rhs
         df = self.lhs.diff(var)
         dg = self.rhs.diff(var)
-        result = f**(g-Variable(1))*(g*df+f*Expression.log(f)*dg)
+        result = f**(g-Constant(1))*(g*df+f*Expression.log(f)*dg)
         return result
                   
     
@@ -506,8 +513,9 @@ class NegNode(UnaryNode):
 
 
 x = Expression.fromString
-d = x('5 * 8 * x**2')
+d = x('5 * 8 * x ** 2')
 print(d)
 f = d.diff()
 print(f)
-print(f.simplify())
+g = f.simplify()
+print(g)
