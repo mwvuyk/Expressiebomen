@@ -1,5 +1,6 @@
 from sympy import Symbol
 from math import sin,cos,tan,log,exp
+import turtle
 
 precedence = {
         '+' : 2,
@@ -161,6 +162,42 @@ class Expression():
             if precedence[self.content] <= p: #Parenthesis should be added if the order of operations
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
+    
+    def drawTree(self): 
+        "uses turtle module to draw expression tree"
+        def depth(self):
+            if type(self) == Constant or type(self) == Variable:
+                return 1
+            elif type(self.lhs) == Constant or type(self.lhs) == Variable:
+                return 2
+            elif self.lhs not in oplist:
+                return depth(self.rhs) + 1
+            elif self.rhs not in oplist:
+                return depth(self.lhs) + 1
+            else:
+                return max(depth(self.lhs), depth(self.rhs)) + 1  #Using max() to calculate the maximum depth - to determine a suitable height
+            
+        def tele_to(x, y): #Teleports to coordinates (without drawing)
+            t.penup()
+            t.goto(x, y)
+            t.pendown()
+            
+        def draw(self, x, y, dx): #Draws lines to connect nodes and writes down text for operators/variables/constants etc.
+            if self != None:
+                t.goto(x, y)
+                tele_to(x, y-20)
+                t.write(self.content, move = False, align='left', font=('Arial', 12, 'bold'))
+                draw(self.lhs, x-dx, y-60, dx/2) #Draws steeper lines after every recursion in order to make it fit
+                tele_to(x, y-20)
+                draw(self.rhs, x+dx, y-60, dx/2)
+                
+        t = turtle.Turtle()
+        h = depth(self)                 #height
+        tele_to(0, 80*h)                #starting location
+        draw(self, 0, 80*h, 40*h)       #draws whole tree
+        t.hideturtle()                  #hides turtle
+        turtle.mainloop()               #closes interactive mode
+
         
     def simplify(self, prev = None):
         if type(self) == Constant or type(self) == Variable:
@@ -214,7 +251,7 @@ class Expression():
             exec("%s = %d" % (v,d[var]))
         return eval(self.inorderRead())
     
-    # basic Shunting-yard algorithm
+    # Shunting-yard algorithm
     def fromString(string):
         # turn string into list with operator values 
         tokens = tokenize(string)
@@ -301,6 +338,8 @@ class Variable(Expression):
     """Represents variable"""
     def __init__(self, x):
         self.content = Symbol(str(x))
+        self.lhs = None
+        self.rhs = None
      
     def __eq__(self, other):
         if isinstance(other, Variable):
@@ -322,6 +361,8 @@ class Constant(Expression):
     """Represents a constant value"""
     def __init__(self, value):
         self.content = value
+        self.lhs = None
+        self.rhs = None
         
     def __eq__(self, other):
         if isinstance(other, Constant):
@@ -510,12 +551,8 @@ class NegNode(UnaryNode):
     def diff(self,var='x'):
         return -self.lhs.diff(var)
 
-
-
 x = Expression.fromString
-d = x('5 * 8 * x ** 2')
-print(d)
+d = x('(1 + sin(x)) * (3 + 4) * x')
 f = d.diff()
-print(f)
-g = f.simplify()
-print(g)
+
+f.drawTree()
