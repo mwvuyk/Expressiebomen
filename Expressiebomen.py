@@ -186,11 +186,23 @@ class Expression():
             if self != None:
                 t.goto(x, y)
                 tele_to(x, y-20)
-                t.write(self.content, move = False, align='left', font=('Arial', 12, 'bold'))
+                if self.content in oplist:
+                    t.pencolor('Black')
+                    t.write(self.content, move = False, align='left', font=('Arial', 14, 'bold'))
+                elif self.content in flist:
+                    t.pencolor('Green')
+                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'bold'))
+                elif type(self) == Variable:
+                    t.pencolor('Red')
+                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'normal'))
+                elif type(self) == Constant:
+                    t.pencolor('Blue')
+                    t.write(self.content, move = False, align='left', font=('Arial', int(13 - (len(str(self.content))/2)), 'normal'))
+                t.pencolor('Black')
                 draw(self.lhs, x-dx, y-60, dx/2) #Draws steeper lines after every recursion in order to make it fit
                 tele_to(x, y-20)
                 draw(self.rhs, x+dx, y-60, dx/2)
-                
+             
         t = turtle.Turtle()
         h = depth(self)                 #height
         tele_to(0, 80*h)                #starting location
@@ -238,7 +250,8 @@ class Expression():
                 self = self.lhs
                 return self    
         self.lhs = Expression.simplify(self.lhs)
-        self.rhs = Expression.simplify(self.rhs)
+        if not isinstance(self, Function) and not isinstance(self, NegNode):
+            self.rhs = Expression.simplify(self.rhs)
         if self == prev: #if nothing changes after another recursion
             return self
         else: 
@@ -552,7 +565,6 @@ class NegNode(UnaryNode):
         return -self.lhs.diff(var)
 
 x = Expression.fromString
-d = x('(1 + sin(x)) * (3 + 4) * x')
-f = d.diff()
+d = x('(1 + sin(x)) * (3 + 480) * x')
 
-f.drawTree()
+d.drawTree()
