@@ -484,7 +484,7 @@ class DivNode(BinaryNode):
         super(DivNode, self).__init__(lhs, rhs, '/')
 
     def diff(self,var='x'):
-        result = (self.lhs.diff(var)*self.rhs+self.rhs.diff(var)*self.lhs)/(self.rhs**2)
+        result = (self.lhs.diff(var)*self.rhs-self.rhs.diff(var)*self.lhs)/(self.rhs**2)
         return result
         
 class PowNode(BinaryNode):
