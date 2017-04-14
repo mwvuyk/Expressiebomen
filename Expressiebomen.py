@@ -94,16 +94,7 @@ def isint(string):
 
 class Expression():
     """A mathematical expression, represented as an expression tree"""
-    
-    """
-    Any concrete subclass of Expression should have these methods:
-     - __str__(): return a string representation of the Expression.
-     - __eq__(other): tree-equality, check if other represents the same expression tree.
-    """
-    # TODO: when adding new methods that should be supported by all subclasses, add them to this list
-    
-    # operator overloading:
-    # this allows us to perform 'arithmetic' with expressions, and obtain another expression
+
     def __add__(self, other):
         return AddNode(self, other)
     
@@ -166,26 +157,25 @@ class Expression():
     def drawTree(self): 
         "uses turtle module to draw expression tree"
         def depth(self):
-            if type(self) == Constant or type(self) == Variable:
-                return 1
-            elif type(self.lhs) == Constant or type(self.lhs) == Variable:
-                return 2
-            elif self.lhs not in oplist:
-                return depth(self.rhs) + 1
-            elif self.rhs not in oplist:
-                return depth(self.lhs) + 1
+            if self != None:
+                depth_lrs = depth(self.lhs)
+                depth_rhs = depth(self.rhs)
+                
+                if (depth_lrs > depth_rhs):
+                    return depth_lrs + 1
+                else:
+                    return depth_rhs + 1
             else:
-                return max(depth(self.lhs), depth(self.rhs)) + 1  #Using max() to calculate the maximum depth - to determine a suitable height
-            
+                return 0
         def tele_to(x, y): #Teleports to coordinates (without drawing)
             t.penup()
             t.goto(x, y)
             t.pendown()
-            
         def draw(self, x, y, dx): #Draws lines to connect nodes and writes down text for operators/variables/constants etc.
             if self != None:
                 t.goto(x, y)
                 tele_to(x, y-20)
+                #writes down type of node in corresponding colour and font
                 if self.content in oplist:
                     t.pencolor('Black')
                     t.write(self.content, move = False, align='left', font=('Arial', 14, 'bold'))
@@ -205,8 +195,10 @@ class Expression():
              
         t = turtle.Turtle()
         h = depth(self)                 #height
-        tele_to(0, 80*h)                #starting location
-        draw(self, 0, 80*h, 40*h)       #draws whole tree
+        if h>= 10:
+            return print("Expression tree is too large to visualize. You mind want to try .simplify()")
+        tele_to(0, 30*h)                #starting location
+        draw(self, 0, 30*h, 30*h)       #draws whole tree
         t.hideturtle()                  #hides turtle
         turtle.mainloop()               #closes interactive mode
 
@@ -241,7 +233,9 @@ class Expression():
             if self.rhs.content == 0:
                 self = self.lhs
                 return self
-            #otherwise NegNode     
+            elif self.lhs.content == 0 and self.rhs.content != 0:
+                self = NegNode() 
+                return self
         elif type(self) == PowNode:
             if self.rhs.content == 0:
                 self = Constant(1)
@@ -566,5 +560,6 @@ class NegNode(UnaryNode):
 
 x = Expression.fromString
 d = x('(1 + sin(x)) * (3 + 480) * x')
+k = d.diff()
 
-d.drawTree()
+k.drawTree()
