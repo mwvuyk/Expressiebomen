@@ -236,7 +236,7 @@ class Expression():
                 self = self.lhs
                 return self
             elif self.lhs.content == 0 and self.rhs.content != 0:
-                self = NegNode() 
+                self = NegNode(self.lhs) 
                 return self
         elif type(self) == PowNode:
             if self.rhs.content == 0:
@@ -283,15 +283,14 @@ class Expression():
             for var in d:
                 exec("%s = %d" % (var, d[var])) 
             return eval(str(self))
-        except NameError:                       # partial evaluation
+        except:                                 # partial evaluation
             for var in d:
                 self = self.findVariable(var, d[var])     
             return self.simplify()    
                 
     
     def fromString(string):
-        " Shunting Yard Algorithm "
-        
+        " Shunting Yard Algorithm (puts tokens in RPN) "
         # turn string into list with operator values 
         tokens = tokenize(string)
         # stack used by the Shunting-Yard algorithm
@@ -302,7 +301,6 @@ class Expression():
                     output.append(Constant(int(value))) 
                 else:
                     output.append(Constant(float(value)))
-
             elif token == 'func':
                 stack.append((token,value))
             elif token == 'var':
@@ -339,9 +337,9 @@ class Expression():
         while stack:
             token = stack.pop()
             if token == 'leftp' or token == 'rightp':
-                raise 'MismatchedParenthesis'
-
+                raise 'MismatchedParenthesis
             output.append(token)
+            
         # convert RPN to actual expression tree
         for t in output:
             if type(t) == tuple:
@@ -578,9 +576,9 @@ class NegNode(UnaryNode):
 
 
 x = Expression.fromString
-d = x('5 * x * (2 + y)')
+d = x('z * x')
 print(d)
 #d.visualizeTree()
 #print(k.simplify())
-k = d.evaluate({'x' : 7})
+k = d.evaluate({'z' : 3})
 print(k)
