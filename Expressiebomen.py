@@ -264,25 +264,28 @@ class Expression():
             return self
         else: 
             return self.simplify(prev = self)
+
+
+    def findVariable(self, var, val):       # to be called for partial evaluations
+        try:    
+            if type(self) == Variable and str(self.content) == var:
+                return Constant(val)
+            self.lhs = self.lhs.findVariable(var, val)
+            if not isinstance(self, Function) and not isinstance(self, NegNode):
+                self.rhs = self.rhs.findVariable(var, val)
+            return self
+        except AttributeError:
+            return self
         
         
     def evaluate(self, d={}): # uses dictionary to fill in value for the given variables
-        def findVariable(self, var, val):       # to be called for partial evaluations
-            if self is not None:    
-                if type(self) == Variable and str(self.content) == var:
-                    self = Constant(val)
-                    return self
-                findVariable(self.lhs, var, val)
-                if not isinstance(self, Function) and not isinstance(self, NegNode):
-                    findVariable(self.rhs, var, val)
-            return self
         try:                                    # simple evaluate with all values of variables given
             for var in d:
                 exec("%s = %d" % (var, d[var])) 
             return eval(str(self))
         except NameError:                       # partial evaluation
             for var in d:
-                self = findVariable(self, var, d[var])     
+                self = self.findVariable(var, d[var])     
             return self.simplify()    
                 
     
