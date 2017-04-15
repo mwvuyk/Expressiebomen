@@ -2,7 +2,7 @@ from sympy import Symbol
 from math import sin,cos,tan,log,exp
 import turtle
 
-precedence = {
+precedence = { # Dictionary of operators with corresponding presedence
         '+' : 2,
         '-' : 2,
         '*' : 3,
@@ -13,7 +13,7 @@ precedence = {
         '#' : 5,
         }
 
-associativity = {
+associativity = { # Dictionary of operators with corresponding associativity
         '+' : 'Left',
         '-' : 'Left',
         '*' : 'Left',
@@ -24,8 +24,8 @@ associativity = {
         '#' : 'Left',
         }
 
-oplist = ['+','-','*','/','%','**','^','(',')']
-flist = ['sin','cos','tan','log','exp']
+oplist = ['+','-','*','/','%','**','^','(',')'] # list of operators to use when to check if element/node is an operator
+flist = ['sin','cos','tan','log','exp']         # list of functions to use when to check if element/node is a function
 
 # split string into list with appropriate attributes for operators
 def tokenize(string):
@@ -94,7 +94,8 @@ def isint(string):
 
 class Expression():
     """A mathematical expression, represented as an expression tree"""
-
+    
+    # overloading operators and functions
     def __add__(self, other):
         return AddNode(self, other)
     
@@ -133,6 +134,7 @@ class Expression():
 
 
     def inorderRead(self, p=0):
+        " Print method - which removes unnecessary brackets "
         if type(self) == Constant or type(self) == Variable:
             return str(self.content) #If we have a number, just return the number
         
@@ -154,9 +156,34 @@ class Expression():
                 a = '(' + a + ')' #Does not match the precedence of the operators
             return a
     
-    def drawTree(self): 
-        "uses turtle module to draw expression tree"
-        def depth(self):
+    def visualizeTree(self): 
+        " Uses turtle module to visualize the expression tree "
+        def tele_to(x, y): # Teleports to coordinates (without drawing)
+            t.penup()
+            t.goto(x, y)
+            t.pendown()
+        def draw(self, x, y, dx): # Draws lines to connect nodes and writes down text for operators/variables/constants etc.
+            if self != None:
+                t.goto(x, y)
+                tele_to(x, y-20)
+                # Writes down type of node in corresponding colour and font
+                if self.content in oplist:      # operator = black
+                    t.pencolor('Black')
+                    t.write(self.content, move = False, align='left', font=('Arial', 14, 'bold'))
+                elif self.content in flist:     # function = green
+                    t.pencolor('Green')
+                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'bold'))
+                elif type(self) == Variable:    # variable = red
+                    t.pencolor('Red')
+                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'normal'))
+                elif type(self) == Constant:    # constant = blue
+                    t.pencolor('Blue')
+                    t.write(self.content, move = False, align='left', font=('Arial', int(13 - (len(str(self.content))/2)), 'normal'))
+                t.pencolor('Black') # switches back to the colour black
+                draw(self.lhs, x-dx, y-60, dx/2) # draws steeper lines after every recursion in order to make it fit
+                tele_to(x, y-20)
+                draw(self.rhs, x+dx, y-60, dx/2)
+        def depth(self):    # calculates maximum depth in order to determine appropriate measurements
             if self != None:
                 depth_lrs = depth(self.lhs)
                 depth_rhs = depth(self.rhs)
@@ -166,52 +193,27 @@ class Expression():
                 else:
                     return depth_rhs + 1
             else:
-                return 0
-        def tele_to(x, y): #Teleports to coordinates (without drawing)
-            t.penup()
-            t.goto(x, y)
-            t.pendown()
-        def draw(self, x, y, dx): #Draws lines to connect nodes and writes down text for operators/variables/constants etc.
-            if self != None:
-                t.goto(x, y)
-                tele_to(x, y-20)
-                #writes down type of node in corresponding colour and font
-                if self.content in oplist:
-                    t.pencolor('Black')
-                    t.write(self.content, move = False, align='left', font=('Arial', 14, 'bold'))
-                elif self.content in flist:
-                    t.pencolor('Green')
-                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'bold'))
-                elif type(self) == Variable:
-                    t.pencolor('Red')
-                    t.write(self.content, move = False, align='left', font=('Arial', 12, 'normal'))
-                elif type(self) == Constant:
-                    t.pencolor('Blue')
-                    t.write(self.content, move = False, align='left', font=('Arial', int(13 - (len(str(self.content))/2)), 'normal'))
-                t.pencolor('Black')
-                draw(self.lhs, x-dx, y-60, dx/2) #Draws steeper lines after every recursion in order to make it fit
-                tele_to(x, y-20)
-                draw(self.rhs, x+dx, y-60, dx/2)
-             
+                return 0        
         t = turtle.Turtle()
-        h = depth(self)                 #height
+        h = depth(self)                 # height
         if h>= 10:
-            return print("Expression tree is too large to visualize. You mind want to try .simplify()")
-        tele_to(0, 30*h)                #starting location
-        draw(self, 0, 30*h, 30*h)       #draws whole tree
-        t.hideturtle()                  #hides turtle
-        turtle.mainloop()               #closes interactive mode
+            return print("Expression tree is too large to visualize. You might want to try .simplify() first")
+        tele_to(0, 30*h)                # starting location
+        draw(self, 0, 30*h, 30*h)       # draws whole tree
+        t.hideturtle()                  # hides turtle
+        turtle.mainloop()               # closes interactive mode
 
         
     def simplify(self, prev = None):
         if type(self) == Constant or type(self) == Variable:
             return self
         elif type(self.lhs) == Constant and type(self.rhs) == Constant:
-            if type(self) == DivNode and self.rhs.content == 0:       #special case for division by zero
+            if type(self) == DivNode and self.rhs.content == 0:       # special case for division by zero
                 print("ERROR! Division by zero! Cannot be simplified.")
             else:        
                 self = Constant(eval('self.lhs.content %s self.rhs.content' % self.content)) 
             return self    
+        # individual special cases for each operator/function
         elif type(self) == MulNode:
             if self.rhs.content == 0 or self.lhs.content == 0:
                 self = Constant(0)
@@ -243,30 +245,57 @@ class Expression():
             elif self.rhs.content == 1:
                 self = self.lhs
                 return self    
+        elif type(self) == LogNode:
+            if self.lhs.content == 1:
+                self = Constant(0)
+                return self 
+        elif type(self) == CosNode:
+            if self.lhs.content == 0:
+                self = Constant(1)
+                return self
+        elif type(self) == SinNode:
+            if self.lhs.content == 0:
+                self = Constant(0)
+                return self
         self.lhs = Expression.simplify(self.lhs)
         if not isinstance(self, Function) and not isinstance(self, NegNode):
             self.rhs = Expression.simplify(self.rhs)
-        if self == prev: #if nothing changes after another recursion
+        if self == prev: # if nothing changes after another recursion, simplify stops
             return self
         else: 
             return self.simplify(prev = self)
         
         
-    def evaluate(self, d={}):
-        for var in d:
-            v = var   
-            exec("%s = %d" % (v,d[var]))
-        return eval(self.inorderRead())
+    def evaluate(self, d={}): # uses dictionary to fill in value for the given variables
+        def findVariable(self, var, val):       # to be called for partial evaluations
+            if self is not None:    
+                if type(self) == Variable and str(self.content) == var:
+                    self = Constant(val)
+                    return self
+                findVariable(self.lhs, var, val)
+                if not isinstance(self, Function) and not isinstance(self, NegNode):
+                    findVariable(self.rhs, var, val)
+            return self
+        try:                                    # simple evaluate with all values of variables given
+            for var in d:
+                exec("%s = %d" % (var, d[var])) 
+            return eval(str(self))
+        except NameError:                       # partial evaluation
+            for var in d:
+                self = findVariable(self, var, d[var])     
+            return self.simplify()    
+                
     
-    # Shunting-yard algorithm
     def fromString(string):
+        " Shunting Yard Algorithm "
+        
         # turn string into list with operator values 
         tokens = tokenize(string)
         # stack used by the Shunting-Yard algorithm
         stack, output = [], []
         for token, value in tokens:
             if token == 'num':
-                if isint(value): #Append the numbers to the output as a float or an int.
+                if isint(value): # Append the numbers to the output as a float or an int.
                     output.append(Constant(int(value))) 
                 else:
                     output.append(Constant(float(value)))
@@ -274,27 +303,21 @@ class Expression():
             elif token == 'func':
                 stack.append((token,value))
             elif token == 'var':
-                output.append(Variable(value)) # Append Variables
-
-          #  elif token == 'neg':
-          #      stack.append((token,value))
-                
+                output.append(Variable(value)) # append variables               
             elif token == 'oper' or token == 'neg':
-                token1, value1 = token, value
+                value1 = value
                 if stack:
-                    while stack[-1][0] == 'oper' or stack[-1][0] == 'neg':   #While there are operators left to process
-                        value2 = stack[-1][1] #Copy values from the top of the stack
+                    while stack[-1][0] == 'oper' or stack[-1][0] == 'neg':   # While there are operators left to process
+                        value2 = stack[-1][1] # Copy values from the top of the stack
                         if ((associativity[value1] == 'Left' and (precedence[value1] <= precedence[value2]))
                         or (associativity[value1] == 'Right' and (precedence[value1] < precedence[value2]))):
-                            #Evaluate precedence and associativity of operators
+                            # Evaluate precedence and associativity of operators
                             output.append(stack.pop())
                             if not stack:
                                 break
                         else:
-                            break
-                        
+                            break        
                 stack.append((token,value))
-
             elif token == 'leftp':
                 stack.append((token,value))
 
@@ -307,8 +330,6 @@ class Expression():
                 stack.pop()
                 if len(stack) > 0 and stack[-1][0] == 'func':
                     output.append(stack.pop())
-
-                #TODO: check for function token
             else: 
                 raise ValueError('Unknown token: %s' % token)
                     
@@ -318,7 +339,7 @@ class Expression():
                 raise 'MismatchedParenthesis'
 
             output.append(token)
-        #convert RPN to actual expression tree
+        # convert RPN to actual expression tree
         for t in output:
             if type(t) == tuple:
                 t = t[1]
@@ -332,14 +353,13 @@ class Expression():
                     stack.append(eval('Expression.%s(x)' % t))
                 elif t == '#':
                     x = stack.pop()
-                    stack.append(eval('-x'))
-                    
+                    stack.append(eval('-x'))   
                 else:
                     stack.append(t)
             except TypeError:
                  stack.append(t) 
         return stack[0]    
-        
+      
     
 class Variable(Expression):
     """Represents variable"""
@@ -353,6 +373,8 @@ class Variable(Expression):
             return self.content == other.content
         else:
             return False
+        
+    # ax^b ? 
         
     def __str__(self):
         return str(self.content)
@@ -408,7 +430,6 @@ class BinaryNode(Expression):
             return False
             
     def __str__(self):
-      #  return self.inorderRead()
         lstring = str(self.lhs)
         rstring = str(self.rhs)
         if isinstance(self.lhs, BinaryNode) and precedence[self.lhs.content] <= precedence[self.content]:
@@ -429,9 +450,7 @@ class UnaryNode(Expression):
             return self.lhs == other.lhs
         else:
             return False
-
     def __str__(self):
-   #     return self.inorderRead()
         lstring = str(self.lhs)
         return "%s %s" % (self.content,lstring)
 class Function(Expression):
@@ -441,8 +460,6 @@ class Function(Expression):
         self.rhs = None
 
     def __str__(self):
-   #     return self.inorderRead()
-
         lstring = str(self.lhs)
         return "%s(%s)" % (self.content, lstring)
 class AddNode(BinaryNode):
@@ -492,8 +509,7 @@ class PowNode(BinaryNode):
         df = self.lhs.diff(var)
         dg = self.rhs.diff(var)
         result = f**(g-Constant(1))*(g*df+f*Expression.log(f)*dg)
-        return result
-                  
+        return result           
     
 class XorNode(BinaryNode):
     """Represents the exclusive or operator"""
@@ -549,7 +565,6 @@ class ExpNode(Function):
         result = self.lhs.diff(var)*Expression.exp(self.lhs)
         return result
     
-        
 class NegNode(UnaryNode):
     """Represents the negative operator (-)"""
     def __init__(self,lhs):
@@ -558,8 +573,11 @@ class NegNode(UnaryNode):
     def diff(self,var='x'):
         return -self.lhs.diff(var)
 
-x = Expression.fromString
-d = x('(1 + sin(x)) * (3 + 480) * x')
-k = d.diff()
 
-k.drawTree()
+x = Expression.fromString
+d = x('5 * x * (2 + y)')
+print(d)
+#d.visualizeTree()
+#print(k.simplify())
+k = d.evaluate({'x' : 7})
+print(k)
