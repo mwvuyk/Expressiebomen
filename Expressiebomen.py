@@ -207,56 +207,71 @@ class Expression():
     def simplify(self, prev = None):
         if type(self) == Constant or type(self) == Variable:
             return self
-        elif type(self.lhs) == Constant and type(self.rhs) == Constant:
+        try: 
+            # Simplying parts with just Constants
             if type(self) == DivNode and self.rhs.content == 0:       # special case for division by zero
                 print("ERROR! Division by zero! Cannot be simplified.")
             else:        
-                self = Constant(eval('self.lhs.content %s self.rhs.content' % self.content)) 
-            return self    
-        # individual special cases for each operator/function
-        elif type(self) == MulNode:
-            if self.rhs.content == 0 or self.lhs.content == 0:
-                self = Constant(0)
-                return self
-            elif self.rhs.content == 1:
-                self = self.lhs
-                return self
-            elif self.lhs.content == 1:
-                self = self.rhs   
-                return self    
-        elif type(self) == AddNode:
-            if self.rhs.content == 0:
-                self = self.lhs
-                return self
-            elif self.lhs.content == 0:
-                self = self.rhs 
-                return self
-        elif type(self) == SubNode:
-            if self.rhs.content == 0:
-                self = self.lhs
-                return self
-            elif self.lhs.content == 0 and self.rhs.content != 0:
-                self = NegNode(self.lhs) 
-                return self
-        elif type(self) == PowNode:
-            if self.rhs.content == 0:
-                self = Constant(1)
-                return self
-            elif self.rhs.content == 1:
-                self = self.lhs
-                return self    
-        elif type(self) == LogNode:
-            if self.lhs.content == 1:
-                self = Constant(0)
-                return self 
-        elif type(self) == CosNode:
-            if self.lhs.content == 0:
-                self = Constant(1)
-                return self
-        elif type(self) == SinNode:
-            if self.lhs.content == 0:
-                self = Constant(0)
-                return self
+                c = float(eval(str(self)))
+                if c >= 0:
+                    if float(c) == int(c):
+                        self = Constant(int(c))
+                        return self
+                    else:
+                        self = Constant(float(c))
+                        return self
+                elif c<0:
+                    if float(c) == int(c):
+                        self = NegNode(int(abs(c)))
+                        return self
+                    else:
+                        self = NegNode(float(abs(c)))
+                        return self
+        except:
+            # individual special cases for each operator/function
+            if type(self) == MulNode:
+                if self.rhs.content == 0 or self.lhs.content == 0:
+                    self = Constant(0)
+                    return self
+                elif self.rhs.content == 1:
+                    self = self.lhs
+                    return self
+                elif self.lhs.content == 1:
+                    self = self.rhs   
+                    return self    
+            elif type(self) == AddNode:
+                if self.rhs.content == 0:
+                    self = self.lhs
+                    return self
+                elif self.lhs.content == 0:
+                    self = self.rhs 
+                    return self
+            elif type(self) == SubNode:
+                if self.rhs.content == 0:
+                    self = self.lhs
+                    return self
+                elif self.lhs.content == 0 and self.rhs.content != 0:
+                    self = NegNode(self.lhs) 
+                    return self
+            elif type(self) == PowNode:
+                if self.rhs.content == 0:
+                    self = Constant(1)
+                    return self
+                elif self.rhs.content == 1:
+                    self = self.lhs
+                    return self    
+            elif type(self) == LogNode:
+                if self.lhs.content == 1:
+                    self = Constant(0)
+                    return self 
+            elif type(self) == CosNode or type(self) == ExpNode:
+                if self.lhs.content == 0:
+                    self = Constant(1)
+                    return self
+            elif type(self) == SinNode:
+                if self.lhs.content == 0:
+                    self = Constant(0)
+                    return self 
         self.lhs = Expression.simplify(self.lhs)
         if not isinstance(self, Function) and not isinstance(self, NegNode):
             self.rhs = Expression.simplify(self.rhs)
@@ -290,26 +305,26 @@ class Expression():
                 
     
     def fromString(string):
-        " Shunting Yard Algorithm (puts tokens in RPN) "
-        # turn string into list with operator values 
-        tokens = tokenize(string)
-        # stack used by the Shunting-Yard algorithm
-        stack, output = [], []
+        " Makes Expression Tree from string input "
+        #step 1: Puts string in RPN with Shunting-Yard algoritm
+        
+        tokens = tokenize(string)         # turn string into list with operator values 
+        stack, output = [], []            # creates stack list Shunting Yard and output list for RPN
         for token, value in tokens:
             if token == 'num':
-                if isint(value): # Append the numbers to the output as a float or an int.
+                if isint(value):                            # append the numbers to the output as a float or an int
                     output.append(Constant(int(value))) 
                 else:
                     output.append(Constant(float(value)))
             elif token == 'func':
-                stack.append((token,value))
+                stack.append((token,value))                 # will be evaluated by Shunting Yard
             elif token == 'var':
-                output.append(Variable(value)) # append variables               
+                output.append(Variable(value))              # append variables to output list              
             elif token == 'oper' or token == 'neg':
                 value1 = value
                 if stack:
                     while stack[-1][0] == 'oper' or stack[-1][0] == 'neg':   # While there are operators left to process
-                        value2 = stack[-1][1] # Copy values from the top of the stack
+                        value2 = stack[-1][1]                                # Copy values from the top of the stack
                         if ((associativity[value1] == 'Left' and (precedence[value1] <= precedence[value2]))
                         or (associativity[value1] == 'Right' and (precedence[value1] < precedence[value2]))):
                             # Evaluate precedence and associativity of operators
@@ -318,29 +333,30 @@ class Expression():
                                 break
                         else:
                             break        
-                stack.append((token,value))
-            elif token == 'leftp':
-                stack.append((token,value))
-
-            elif token == 'rightp':
-                while stack[-1][0] != 'leftp':
-                    try:
+                stack.append((token,value))         
+            elif token == 'leftp':                      # when token is LEFT paranthesis
+                stack.append((token,value))             # token is added to top of stack
+                
+            elif token == 'rightp':                     # when token is RIGHT paranthesis
+                while stack[-1][0] != 'leftp':          # as long there are no left parantheses on top of stack
+                    try:                                # add all items on stack to output
                         output.append(stack.pop())
-                    except IndexError:
+                    except IndexError:                  # catches error for incorrect use of parantheses
                         raise 'MismatchedParenthesis'
                 stack.pop()
-                if len(stack) > 0 and stack[-1][0] == 'func':
-                    output.append(stack.pop())
+                if len(stack) > 0 and stack[-1][0] == 'func': # when left paranthesis and found and function is on top of stack
+                    output.append(stack.pop())                # add it to output
             else: 
-                raise ValueError('Unknown token: %s' % token)
+                raise ValueError('Unknown token: %s' % token) # catches error for incorrect use of tokens
                     
-        while stack:
+        while stack:                                    # after all tokens are evaluated, elements still on stack are added to output
             token = stack.pop()
             if token == 'leftp' or token == 'rightp':
-                raise 'MismatchedParenthesis
+                raise 'MismatchedParenthesis'
             output.append(token)
             
-        # convert RPN to actual expression tree
+        # step 2: convert RPN to actual expression tree
+        print(output)
         for t in output:
             if type(t) == tuple:
                 t = t[1]
@@ -556,7 +572,6 @@ class LogNode(Function):
         result = self.lhs.diff(var) / self.lhs
         return result
 
-
 class ExpNode(Function):
     """Represents the exponent (e^x)"""
     def __init__(self,lhs):
@@ -576,9 +591,9 @@ class NegNode(UnaryNode):
 
 
 x = Expression.fromString
-d = x('z * x')
+d = x('(1+x)*(3*x**2)')
 print(d)
-#d.visualizeTree()
-#print(k.simplify())
-k = d.evaluate({'z' : 3})
+k = d.diff()
 print(k)
+print(k.simplify())
+#e.visualizeTree()
