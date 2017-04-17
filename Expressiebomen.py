@@ -561,7 +561,7 @@ class TanNode(Function):
         super (TanNode,self).__init__(lhs,'tan')
 
     def diff(self,var='x'):
-        result = (Variable(2)*self.lhs.diff(var))/(Expression.cos(Variable(2)*self.lhs)+Variable(1))
+        result = (Constant(2)*self.lhs.diff(var))/(Expression.cos(Constant(2)*self.lhs)+Constant(1))
         return result
 
 class CosNode(Function):
