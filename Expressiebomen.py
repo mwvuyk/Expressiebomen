@@ -599,11 +599,11 @@ class NegNode(UnaryNode):
     def diff(self,var='x'):
         return -self.lhs.diff(var)
 
-
-x = Expression.fromString
-d = x('(1+x)*(3*x**2)')
-print(d)
-k = d.diff()
-print(k)
-print(k.simplify())
-#e.visualizeTree()
+if __name__ == '__main__':
+    x = Expression.fromString
+    d = x('(1+x)*(3*x**2)')
+    print(d)
+    k = d.diff()
+    print(k)
+    print(k.simplify())
+    #e.visualizeTree()
