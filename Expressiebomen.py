@@ -252,9 +252,10 @@ class Expression():
                 if self.lhs.content == 0:
                     self = Constant(0)
                     return self 
-        self.lhs = Expression.simplify(self.lhs)
-        if not isinstance(self, Function) and not isinstance(self, NegNode):
-            self.rhs = Expression.simplify(self.rhs)
+        if type(self) != Constant and type(self) != Variable:        
+            self.lhs = Expression.simplify(self.lhs)
+            if not isinstance(self, Function) and not isinstance(self, NegNode):
+                self.rhs = Expression.simplify(self.rhs)
         if self == prev:                                                       # if nothing changes after another recursion, simplify stops
             return self
         else: 
@@ -572,7 +573,7 @@ class NegNode(UnaryNode):
 
 if __name__ == '__main__':
     x = Expression.fromString
-    d = x('1*5 + 0*x**2 + cos(x*0) + 0')
-    #print(d)
-    e = d.simplify()
-    #print(e)
+    d = x('1*5*x**4 + x**2*x + cos(x*5)*x**2 + 0')
+    e = d.diff()
+    f = e.simplify()
+    print(f)
