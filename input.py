@@ -6,7 +6,8 @@ helpstr = {"new"        : "Create a new tree from an expression. Syntax: new <na
            "diff"       : "Differentiate by a variable from a tree to a new tree. Syntax: diff <variable> <name> <new name>.",
            "print"      : "Print the expression represented by a tree. Syntax: print <name>.",
            "stop"       : "Exit the program.",
-           "help"       : "You're already using this command."}
+           "help"       : "You're already using this command.",
+           "visualize"  : "Visualize a tree. Syntax: visualize <name>."}
 print('Commands: new, simplify, diff, visualize, print, stop, help. Other operations (+,*,etc) work too.')
 print('You must access trees outside of commands by doing: "trees['+"'treename'"+']".')
 print("For example: trees['c'] = trees['a'] + trees['b'].")
