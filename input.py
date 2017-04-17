@@ -7,8 +7,9 @@ helpstr = {"new"        : "Create a new tree from an expression. Syntax: new <na
            "print"      : "Print the expression represented by a tree. Syntax: print <name>.",
            "stop"       : "Exit the program.",
            "help"       : "You're already using this command.",
-           "visualize"  : "Visualize a tree. Syntax: visualize <name>."}
-print('Commands: new, simplify, diff, visualize, print, stop, help. Other operations (+,*,etc) work too.')
+           "visualize"  : "Visualize a tree. Syntax: visualize <name>.",
+           "evaluate"   : "Evaluate the expression represented by a tree. Syntax: evaluate <name> <dict of vars>.\nDict of vars in the form: {'x':3,'y':7}. Variables left out result in partial evaluation."}
+print('Commands: new, simplify, diff, visualize, print, stop, evaluate, help. Other operations (+,*,etc) work too.')
 print('You must access trees outside of commands by doing: "trees['+"'treename'"+']".')
 print("For example: trees['c'] = trees['a'] + trees['b'].")
 print("Also, in order to modify a tree with a mathematical function, you must use")
@@ -57,7 +58,12 @@ while True:
                 if len(i) == 2:
                     print(str(trees[i[1]]))
                 else:
-                    print('Wrong number of arguments. Expected: 1')            
+                    print('Wrong number of arguments. Expected: 1')
+
+            elif i[0] == "evaluate":
+                print("".join(i[2:]))
+                x = trees[i[1]].evaluate(eval("".join(i[2:])))
+                print('Expression evaluated to: ' + str(x))
 
                 
             elif i[0] == "stop":
