@@ -572,8 +572,9 @@ class NegNode(UnaryNode):
         return -self.lhs.diff(var)
 
 if __name__ == '__main__':
-    x = Expression.fromString
-    d = x('1*5*x**4 + x**2*x + cos(x*5)*x**2 + 0')
-    e = d.diff()
-    f = e.simplify()
-    print(f)
+    "testcase"
+    #x = Expression.fromString
+    #d = x('(x+1)*(x**2)')
+    #e = d.diff()
+    #f = e.simplify()
+    #print(f.evaluate({'x':2}))
