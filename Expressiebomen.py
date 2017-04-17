@@ -131,30 +131,7 @@ class Expression():
 
     def log(self):
         return LogNode(self)
-
-
-    def inorderRead(self, p=0):
-        " Print method - which removes unnecessary brackets "
-        if type(self) == Constant or type(self) == Variable:
-            return str(self.content)                            #If we have a number, just return the number
-        
-        elif self.content in flist:                             #If we have a function, we need to set very low precedence and always have parenthesis
-            a = self.content + '(' + self.lhs.inorderRead(-1) + ')'
-            return a
-
-        elif self.content == '-' and self.rhs == None:          # if we have a negative -, treat it as a function but without parentheses
-            a = self.content + self.lhs.inorderRead(5)
-            return a
-        else:    
-            try:
-                a = self.lhs.inorderRead(precedence[self.content])      # if we have an operator
-                a = a + self.content                                    # read its left and right nodes
-                a = a + self.rhs.inorderRead(precedence[self.content])  # in Inorder (Left,self,Right)
-            except AttributeError:                                      # if no more nodes exist, nothing more needs to be done. (This may not be neccesary.)
-                print("AttributeError. Invalid expression?")
-            if precedence[self.content] <= p:                           # parenthesis should be added if the order of operations
-                a = '(' + a + ')'                                       # does not match the precedence of the operators
-            return a
+    
     
     def visualizeTree(self): 
         " Uses turtle module to visualize the expression tree "
