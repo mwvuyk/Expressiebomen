@@ -210,26 +210,23 @@ class Expression():
             return self
         try: 
             # Simplying parts with just Constants
-            if type(self) == DivNode and self.rhs.content == 0:       # special case for division by zero
-                print("ERROR! Division by zero! Cannot be simplified.")
-            else:        
-                c = float(eval(str(self)))
-                if c >= 0:                          # when evaluation of children is larger than zero -> just use constant
-                    if float(c) == int(c):          
-                        self = Constant(int(c))
-                        return self
-                    else:
-                        self = Constant(float(c))
-                        return self
-                elif c<0:                           # when evaluation of children is less than zero -> use negation
-                    if float(c) == int(c):
-                        self = NegNode(int(abs(c)))
-                        return self
-                    else:
-                        self = NegNode(float(abs(c)))
-                        return self
+            c = float(eval(str(self)))
+            if c >= 0:                          # when evaluation of children is larger than zero -> just use constant
+                if float(c) == int(c):          
+                    self = Constant(int(c))
+                    return self
+                else:
+                    self = Constant(float(c))
+                    return self
+            elif c<0:                           # when evaluation of children is less than zero -> use negation
+                if float(c) == int(c):
+                    self = NegNode(int(abs(c)))
+                    return self
+                else:
+                    self = NegNode(float(abs(c)))
+                    return self
         except:
-            # individual special cases for each operator/function
+            # individual special cases for each operator/function with present variables
             if type(self) == MulNode:
                 if self.rhs.content == 0 or self.lhs.content == 0:
                     self = Constant(0)
@@ -240,6 +237,15 @@ class Expression():
                 elif self.lhs.content == 1:
                     self = self.rhs   
                     return self    
+            elif type(self) == DivNode:
+                if self.rhs.content == 0:
+                    print("ERROR! Division by zero is not valid! Cannot be simplified.")    # exception 1) for division by zero which is not allowed
+                    return self
+                elif self.rhs.content == 1:
+                    self = self.lhs
+                    return self
+                elif self.lhs.content == 0:
+                    self = Constant(0)
             elif type(self) == AddNode:
                 if self.rhs.content == 0:
                     self = self.lhs
@@ -262,10 +268,12 @@ class Expression():
                     self = self.lhs
                     return self    
             elif type(self) == LogNode:
+                if self.lhs.content == 0:
+                    print("ERROR! Log(0) is not valid! Cannot be simplified.")              # exception 2) for log(0) which is also not allowed
                 if self.lhs.content == 1:
                     self = Constant(0)
                     return self 
-            elif type(self) == CosNode or type(self) == ExpNode:    # same case for both cos (x) and e^x
+            elif type(self) == CosNode or type(self) == ExpNode:               # same case for both cos (x) and e^x
                 if self.lhs.content == 0:
                     self = Constant(1)
                     return self
@@ -276,7 +284,7 @@ class Expression():
         self.lhs = Expression.simplify(self.lhs)
         if not isinstance(self, Function) and not isinstance(self, NegNode):
             self.rhs = Expression.simplify(self.rhs)
-        if self == prev:                                   # if nothing changes after another recursion, simplify stops
+        if self == prev:                                                       # if nothing changes after another recursion, simplify stops
             return self
         else: 
             return self.simplify(prev = self)
