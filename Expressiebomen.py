@@ -47,7 +47,7 @@ def tokenize(string):
             ans[-1] = '**'
 
         elif len(ans) > 2 and t == '(' and ans[-1] in flist:
-            ans[-1] = ans[-1]
+            ans[-1] = ans[-1] # ???
             ans.append(t)
         else:
             ans.append(t)
@@ -57,19 +57,19 @@ def tokenize(string):
     for i in ans:
         
         if ((prev != ')' and prev in oplist) or prev == None) and i == '-':
-            tokens.append(('neg','#')) #if negation -
+            tokens.append(('neg','#'))    # if negation -
         elif len(i)>1 and i in flist:
-            tokens.append(('func',i)) #if function
+            tokens.append(('func',i))     # if function
         elif i == '(':
-            tokens.append(('leftp',i)) #if parenthesis
+            tokens.append(('leftp',i))    # if parenthesis
         elif i == ')':
-            tokens.append(('rightp',i))   #if parenthesis
+            tokens.append(('rightp',i))   # if parenthesis
         elif i in oplist:
-            tokens.append(('oper', i)) #if operator
+            tokens.append(('oper', i))    # if operator
         elif isnumber(i):
-            tokens.append(('num', i))   #if constant
+            tokens.append(('num', i))     # if constant
         else: 
-            tokens.append(('var', i))   #if variable
+            tokens.append(('var', i))     # if variable
         prev = i
             
     return tokens
@@ -136,29 +136,29 @@ class Expression():
     def inorderRead(self, p=0):
         " Print method - which removes unnecessary brackets "
         if type(self) == Constant or type(self) == Variable:
-            return str(self.content) #If we have a number, just return the number
+            return str(self.content)                            #If we have a number, just return the number
         
-        elif self.content in flist: #If we have a function, we need to set very low precedence and always have parenthesis
+        elif self.content in flist:                             #If we have a function, we need to set very low precedence and always have parenthesis
             a = self.content + '(' + self.lhs.inorderRead(-1) + ')'
             return a
 
-        elif self.content == '-' and self.rhs == None: #If we have a negative -, treat it as a function but without parentheses
+        elif self.content == '-' and self.rhs == None:          # if we have a negative -, treat it as a function but without parentheses
             a = self.content + self.lhs.inorderRead(5)
             return a
         else:    
             try:
-                a = self.lhs.inorderRead(precedence[self.content]) #If we have an operator
-                a = a + self.content                               #Read its left and right nodes
-                a = a + self.rhs.inorderRead(precedence[self.content]) #In Inorder (Left,self,Right)
-            except AttributeError:                                 #If no more nodes exist, nothing more needs to be done. (This may not be neccesary.)
+                a = self.lhs.inorderRead(precedence[self.content])      # if we have an operator
+                a = a + self.content                                    # read its left and right nodes
+                a = a + self.rhs.inorderRead(precedence[self.content])  # in Inorder (Left,self,Right)
+            except AttributeError:                                      # if no more nodes exist, nothing more needs to be done. (This may not be neccesary.)
                 print("AttributeError. Invalid expression?")
-            if precedence[self.content] <= p: #Parenthesis should be added if the order of operations
-                a = '(' + a + ')' #Does not match the precedence of the operators
+            if precedence[self.content] <= p:                           # parenthesis should be added if the order of operations
+                a = '(' + a + ')'                                       # does not match the precedence of the operators
             return a
     
     def visualizeTree(self): 
         " Uses turtle module to visualize the expression tree "
-        def tele_to(x, y): # Teleports to coordinates (without drawing)
+        def tele_to(x, y):        # Teleports to coordinates (without drawing)
             t.penup()
             t.goto(x, y)
             t.pendown()
@@ -179,11 +179,11 @@ class Expression():
                 elif type(self) == Constant:    # constant = blue
                     t.pencolor('Blue')
                     t.write(self.content, move = False, align='left', font=('Arial', int(13 - (len(str(self.content))/2)), 'normal'))
-                t.pencolor('Black') # switches back to the colour black
-                draw(self.lhs, x-dx, y-60, dx/2) # draws steeper lines after every recursion in order to make it fit
+                t.pencolor('Black')             # switches back to the colour black
+                draw(self.lhs, x-dx, y-60, dx/2)# draws steeper lines after every recursion in order to make it fit
                 tele_to(x, y-20)
                 draw(self.rhs, x+dx, y-60, dx/2)
-        def depth(self):    # calculates maximum depth in order to determine appropriate measurements
+        def depth(self):                        # calculates maximum depth in order to determine appropriate measurements
             if self != None:
                 depth_lrs = depth(self.lhs)
                 depth_rhs = depth(self.rhs)
@@ -205,6 +205,7 @@ class Expression():
 
         
     def simplify(self, prev = None):
+        " Simplifies Expression Tree "
         if type(self) == Constant or type(self) == Variable:
             return self
         try: 
@@ -213,14 +214,14 @@ class Expression():
                 print("ERROR! Division by zero! Cannot be simplified.")
             else:        
                 c = float(eval(str(self)))
-                if c >= 0:
-                    if float(c) == int(c):
+                if c >= 0:                          # when evaluation of children is larger than zero -> just use constant
+                    if float(c) == int(c):          
                         self = Constant(int(c))
                         return self
                     else:
                         self = Constant(float(c))
                         return self
-                elif c<0:
+                elif c<0:                           # when evaluation of children is less than zero -> use negation
                     if float(c) == int(c):
                         self = NegNode(int(abs(c)))
                         return self
@@ -264,7 +265,7 @@ class Expression():
                 if self.lhs.content == 1:
                     self = Constant(0)
                     return self 
-            elif type(self) == CosNode or type(self) == ExpNode:
+            elif type(self) == CosNode or type(self) == ExpNode:    # same case for both cos (x) and e^x
                 if self.lhs.content == 0:
                     self = Constant(1)
                     return self
@@ -275,7 +276,7 @@ class Expression():
         self.lhs = Expression.simplify(self.lhs)
         if not isinstance(self, Function) and not isinstance(self, NegNode):
             self.rhs = Expression.simplify(self.rhs)
-        if self == prev: # if nothing changes after another recursion, simplify stops
+        if self == prev:                                   # if nothing changes after another recursion, simplify stops
             return self
         else: 
             return self.simplify(prev = self)
@@ -293,7 +294,7 @@ class Expression():
             return self
         
         
-    def evaluate(self, d={}): # uses dictionary to fill in value for the given variables
+    def evaluate(self, d={}):                   # uses dictionary to fill in value for the given variables
         try:                                    # simple evaluate with all values of variables given
             for var in d:
                 exec("%s = %d" % (var, d[var])) 
@@ -308,8 +309,8 @@ class Expression():
         " Makes Expression Tree from string input "
         #step 1: Puts string in RPN with Shunting-Yard algoritm
         
-        tokens = tokenize(string)         # turn string into list with operator values 
-        stack, output = [], []            # creates stack list Shunting Yard and output list for RPN
+        tokens = tokenize(string)                           # turn string into list with operator values 
+        stack, output = [], []                              # creates stack list Shunting Yard and output list for RPN
         for token, value in tokens:
             if token == 'num':
                 if isint(value):                            # append the numbers to the output as a float or an int
@@ -344,7 +345,7 @@ class Expression():
                     except IndexError:                  # catches error for incorrect use of parantheses
                         raise 'MismatchedParenthesis'
                 stack.pop()
-                if len(stack) > 0 and stack[-1][0] == 'func': # when left paranthesis and found and function is on top of stack
+                if len(stack) > 0 and stack[-1][0] == 'func': # when left paranthesis is found and function is on top of stack
                     output.append(stack.pop())                # add it to output
             else: 
                 raise ValueError('Unknown token: %s' % token) # catches error for incorrect use of tokens
@@ -356,26 +357,25 @@ class Expression():
             output.append(token)
             
         # step 2: convert RPN to actual expression tree
-        print(output)
         for t in output:
-            if type(t) == tuple:
+            if type(t) == tuple:                                # reduce to just its value
                 t = t[1]
             try:       
                 if t in oplist:
                     y = stack.pop()
                     x = stack.pop()
-                    stack.append(eval('x %s y' % t))
+                    stack.append(eval('x %s y' % t))            # evaluate operators
                 elif t in flist:
                     x = stack.pop()
-                    stack.append(eval('Expression.%s(x)' % t))
+                    stack.append(eval('Expression.%s(x)' % t))  # evaluate functions
                 elif t == '#':
                     x = stack.pop()
-                    stack.append(eval('-x'))   
+                    stack.append(eval('-x'))                    # evaluate negations
                 else:
                     stack.append(t)
             except TypeError:
                  stack.append(t) 
-        return stack[0]    
+        return stack[0]                                         # return Expression Tree 
       
     
 class Variable(Expression):
@@ -390,8 +390,6 @@ class Variable(Expression):
             return self.content == other.content
         else:
             return False
-        
-    # ax^b ? 
         
     def __str__(self):
         return str(self.content)
@@ -446,7 +444,7 @@ class BinaryNode(Expression):
         else:
             return False
             
-    def __str__(self):
+    def __str__(self):              # overloading of __str__ which calls its children (other subclasses) in the process 
         lstring = str(self.lhs)
         rstring = str(self.rhs)
         if isinstance(self.lhs, BinaryNode) and precedence[self.lhs.content] <= precedence[self.content]:
@@ -456,6 +454,7 @@ class BinaryNode(Expression):
         return "%s %s %s" % (lstring, self.content, rstring)
 
 class UnaryNode(Expression):
+    """A node in the expression tree representing a unary operator."""
 
     def __init__(self,lhs,op_symbol):
         self.lhs = lhs
@@ -470,7 +469,9 @@ class UnaryNode(Expression):
     def __str__(self):
         lstring = str(self.lhs)
         return "%s %s" % (self.content,lstring)
+    
 class Function(Expression):
+    """A node in the expressin tree representing a function operator."""
     def __init__(self,lhs,content):
         self.lhs = lhs
         self.content = content
@@ -479,6 +480,7 @@ class Function(Expression):
     def __str__(self):
         lstring = str(self.lhs)
         return "%s(%s)" % (self.content, lstring)
+    
 class AddNode(BinaryNode):
     """Represents the addition operator"""
     def __init__(self, lhs, rhs):
