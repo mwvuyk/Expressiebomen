@@ -40,6 +40,7 @@ def tokenize(string):
             tokenstring.append(c)
     tokenstring = ''.join(tokenstring)
     stringlist = tokenstring.split() 
+    
     #2) additional case for multiple letter operators
     ans = []    
     for t in stringlist:
@@ -47,10 +48,10 @@ def tokenize(string):
             ans[-1] = '**'
 
         elif len(ans) > 2 and t == '(' and ans[-1] in flist:
-            ans[-1] = ans[-1] # ???
             ans.append(t)
         else:
             ans.append(t)
+            
     #3) classify 
     tokens = []
     prev = None
@@ -195,7 +196,7 @@ class Expression():
                 else:
                     self = Constant(float(c))
                     return self
-            elif c<0:                           # when evaluation of children is less than zero -> use negation
+            elif c < 0:                         # when evaluation of children is less than zero -> use negation
                 if float(c) == int(c):
                     self = NegNode(int(abs(c)))
                     return self
@@ -210,30 +211,24 @@ class Expression():
                     return self
                 elif self.rhs.content == 1:
                     self = self.lhs
-                    return self
                 elif self.lhs.content == 1:
-                    self = self.rhs   
-                    return self    
+                    self = self.rhs      
             elif type(self) == DivNode:
                 if self.rhs.content == 0:
                     print("ERROR! Division by zero is not valid! Cannot be simplified.")    # exception 1) for division by zero which is not allowed
-                    return self
                 elif self.rhs.content == 1:
                     self = self.lhs
-                    return self
                 elif self.lhs.content == 0:
                     self = Constant(0)
+                    return self
             elif type(self) == AddNode:
                 if self.rhs.content == 0:
                     self = self.lhs
-                    return self
                 elif self.lhs.content == 0:
                     self = self.rhs 
-                    return self
             elif type(self) == SubNode:
                 if self.rhs.content == 0:
                     self = self.lhs
-                    return self
                 elif self.lhs.content == 0 and self.rhs.content != 0:
                     self = NegNode(self.lhs) 
                     return self
@@ -242,8 +237,7 @@ class Expression():
                     self = Constant(1)
                     return self
                 elif self.rhs.content == 1:
-                    self = self.lhs
-                    return self    
+                    self = self.lhs    
             elif type(self) == LogNode:
                 if self.lhs.content == 0:
                     print("ERROR! Log(0) is not valid! Cannot be simplified.")              # exception 2) for log(0) which is also not allowed
@@ -578,9 +572,7 @@ class NegNode(UnaryNode):
 
 if __name__ == '__main__':
     x = Expression.fromString
-    d = x('(1+x)*(3*x**2)')
-    print(d)
-    k = d.diff()
-    print(k)
-    print(k.simplify())
-    #e.visualizeTree()
+    d = x('1*5 + 0*x**2 + cos(x*0) + 0')
+    #print(d)
+    e = d.simplify()
+    #print(e)
