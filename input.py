@@ -8,8 +8,9 @@ helpstr = {"new"        : "Create a new tree from an expression. Syntax: new <na
            "stop"       : "Exit the program.",
            "help"       : "You're already using this command.",
            "visualize"  : "Visualize a tree. Syntax: visualize <name>.",
-           "evaluate"   : "Evaluate the expression represented by a tree. Syntax: evaluate <name> <dict of vars>.\nDict of vars in the form: {'x':3,'y':7}. Variables left out result in partial evaluation."}
-print('Commands: new, simplify, diff, visualize, print, stop, evaluate, help. Other operations (+,*,etc) work too.')
+           "evaluate"   : "Evaluate the expression represented by a tree. Syntax: evaluate <name> <dict of vars>.\nDict of vars in the form: {'x':3,'y':7}. Variables left out result in partial evaluation.",
+           "iseq"       : "Is tree a the same as tree b? Syntax: iseq <name> <othername>."}
+print('Commands: new, simplify, diff, visualize, print, stop, evaluate, iseq, help. Other operations (+,*,etc) work too.')
 print('You must access trees outside of commands by doing: "trees['+"'treename'"+']".')
 print("For example: trees['c'] = trees['a'] + trees['b'].")
 print("Also, in order to modify a tree with a mathematical function, you must use")
@@ -64,6 +65,12 @@ while True:
                 print("".join(i[2:]))
                 x = trees[i[1]].evaluate(eval("".join(i[2:])))
                 print('Expression evaluated to: ' + str(x))
+
+            elif i[0] == "iseq":
+                if len(i) == 3:
+                    print(trees[i[1]] == trees[i[2]])
+                else:
+                    print('Wrong number of arguments. Expected: 2')
 
                 
             elif i[0] == "stop":
